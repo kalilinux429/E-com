@@ -1,0 +1,190 @@
+/* Global Styles */
+html, body {
+  height: 100%; /* Ensure the body takes up the full height */
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  background-color: #f5f5f5;
+  transition: background 0.3s ease;
+}
+
+.dark-mode {
+  background-color: #222;
+  color: white;
+}
+
+/* Navbar */
+.navbar {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 10px;
+  background-color: #333;
+  color: white;
+  position: sticky;
+  top: 0;
+  width: 100%;
+  z-index: 1000; /* Ensure the navbar stays on top */
+}
+
+.navbar input {
+  padding: 5px;
+  font-size: 16px;
+}
+
+.navbar button {
+  background-color: #ff6600;
+  border: none;
+  color: white;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 200px;
+  background-color: #eee;
+  padding: 15px;
+  height: 100%;
+  position: fixed;
+  top: 50px; /* Start below the navbar */
+  left: 0;
+  overflow-y: auto;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.sidebar li {
+  padding: 8px;
+  cursor: pointer;
+  background: #ddd;
+  margin: 5px 0;
+  text-align: center;
+  border-radius: 5px;
+}
+
+.sidebar li:hover {
+  background-color: #ccc;
+}
+
+/* Main Container */
+.container {
+  display: flex;
+  margin-left: 220px; /* Give space for the sidebar */
+  padding: 20px;
+  flex-grow: 1;
+  height: calc(100% - 50px); /* Adjust for the navbar height */
+  overflow-y: auto;
+}
+
+/* Product Grid */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+  width: 100%;
+}
+
+/* Product Card */
+.product-card {
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  transition: transform 0.2s;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.product-card:hover {
+  transform: scale(1.05);
+}
+
+.product-card img {
+  width: 100%;
+  height: auto;
+  max-height: 200px;
+  object-fit: contain;
+}
+
+.product-card h3 {
+  font-size: 16px;
+  margin: 10px 0;
+}
+
+.product-card p {
+  font-size: 14px;
+  color: #555;
+}
+
+.product-card button {
+  background-color: #28a745;
+  border: none;
+  color: white;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 5px;
+  margin-top: 10px;
+}
+
+.product-card button:hover {
+  background-color: #218838;
+}
+
+/* Cart */
+.cart {
+  padding: 20px;
+}
+
+.cart div {
+  background: white;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.pagination button {
+  padding: 8px 12px;
+  margin: 5px;
+  border: none;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.pagination button:hover {
+  background-color: #0056b3;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+    margin-left: 0; /* Sidebar should stack on top in small screens */
+  }
+
+  .sidebar {
+    position: relative;
+    width: 100%;
+    height: auto;
+    top: 0; /* Adjust for mobile layout */
+  }
+
+  .product-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+}
