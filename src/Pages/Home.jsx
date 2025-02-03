@@ -1,6 +1,6 @@
 import React from "react";
-import Sidebar from "../Components/Sidebar";
-import ProductList from "../Components/ProductList";
+import Sidebar from "../components/Sidebar";
+import ProductList from "../components/ProductList";
 
 const Home = () => (
   <div className="container">
