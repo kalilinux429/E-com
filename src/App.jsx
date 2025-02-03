@@ -9,7 +9,7 @@ import { AppProvider } from "./context/AppContext";
 // Import Components
 import Navbar from './components/Navbar.jsx'
 
-import ProductList from "./Components/ProductList";
+import ProductList from "./components/ProductList";
 import Cart from "./components/Cart.jsx"
 import Home from "./Pages/Home";
 
