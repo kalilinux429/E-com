@@ -1,50 +1,13 @@
-// import React, { createContext, useContext, useState, useEffect } from "react";
-// import axios from "axios";
-
-// const AppContext = createContext();
-// export const useAppContext = () => useContext(AppContext);
-
-// export const AppProvider = ({ children }) => {
-//   const [user, setUser] = useState(null);
-//   const [products, setProducts] = useState([]);
-//   const [categories, setCategories] = useState([]);
-//   const [searchQuery, setSearchQuery] = useState("");
-//   const [selectedCategory, setSelectedCategory] = useState("");
-//   const [cart, setCart] = useState([]);
-//   const [darkMode, setDarkMode] = useState(false);
-//   const [currentPage, setCurrentPage] = useState(1);
-//   const itemsPerPage = 8;
-
-
-//   useEffect(() => {
-//     if (darkMode) {
-//       document.body.classList.add("dark-mode");
-//     } else {
-//       document.body.classList.remove("dark-mode");
-//     }
-//   }, [darkMode]);
-
-//   useEffect(() => {
-//     axios.get("https://fakestoreapi.com/products").then((res) => setProducts(res.data));
-//     axios.get("https://fakestoreapi.com/products/categories").then((res) => setCategories(res.data));
-//   }, []);
-
-//   return (
-//     <AppContext.Provider value={{ user, setUser, products, categories, searchQuery, setSearchQuery, selectedCategory, setSelectedCategory, cart, setCart, darkMode, setDarkMode, currentPage, setCurrentPage, itemsPerPage }}>
-//       {children}
-//     </AppContext.Provider>
-//   );
-// };
-
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "../firebase"; // Ensure this is correctly configured
 
 const AppContext = createContext();
 export const useAppContext = () => useContext(AppContext);
 
 export const AppProvider = ({ children }) => {
-  const [user, setUser] = useState(null); // Stores user info after Google login
+  const [user, setUser] = useState(null);
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -54,27 +17,12 @@ export const AppProvider = ({ children }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
-  // Check if user data exists in localStorage on app load
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser)); // Set the user if data exists
-      } catch (error) {
-        console.error("Error parsing user data from localStorage", error);
-        localStorage.removeItem("user"); // Remove invalid user data
-      }
-    }
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
   }, []);
-
-  // Save user data to localStorage whenever it changes
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem("user", JSON.stringify(user));
-    } else {
-      localStorage.removeItem("user"); // Clear user data when logged out
-    }
-  }, [user]);
 
   useEffect(() => {
     if (darkMode) {
@@ -84,40 +32,94 @@ export const AppProvider = ({ children }) => {
     }
   }, [darkMode]);
 
+  // Fetch products and categories from API
   useEffect(() => {
-    axios.get("https://fakestoreapi.com/products").then((res) => setProducts(res.data));
-    axios.get("https://fakestoreapi.com/products/categories").then((res) => setCategories(res.data));
+    axios.get("https://fakestoreapi.com/products")
+      .then((res) => setProducts(res.data))
+      .catch((error) => console.error("Error fetching products:", error));
+
+    axios.get("https://fakestoreapi.com/products/categories")
+      .then((res) => setCategories(res.data))
+      .catch((error) => console.error("Error fetching categories:", error));
   }, []);
 
-  const handleLogin = (googleUser) => {
-    // Adjust the user object based on the Google login response
-    setUser(googleUser);
+  // Filter products based on search query and selected category
+  const filteredProducts = products.filter((product) => {
+    const matchesSearchQuery = product.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = selectedCategory ? product.category === selectedCategory : true;
+    return matchesSearchQuery && matchesCategory;
+  });
+
+  const addToCart = (product) => {
+    setCart((prevCart) => {
+      const existingItem = prevCart.find((item) => item.id === product.id);
+      if (existingItem) {
+        return prevCart.map((item) =>
+          item.id === product.id
+            ? { ...item, quantity: (item.quantity || 0) + 1 }
+            : item
+        );
+      }
+      return [...prevCart, { ...product, quantity: 1 }];
+    });
   };
 
-  const handleLogout = () => {
-    setUser(null); // Clears the user from context
+  const increaseQuantity = (productId) => {
+    setCart((prevCart) =>
+      prevCart.map((item) =>
+        item.id === productId
+          ? { ...item, quantity: (item.quantity || 0) + 1 }
+          : item
+      )
+    );
   };
+
+  const decreaseQuantity = (productId) => {
+    setCart((prevCart) =>
+      prevCart
+        .map((item) =>
+          item.id === productId
+            ? { ...item, quantity: Math.max(1, (item.quantity || 0) - 1) }
+            : item
+        )
+        .filter((item) => item.quantity > 0) // Remove item if quantity is 0
+    );
+  };
+
+  const removeFromCart = (productId) => {
+    setCart((prevCart) => prevCart.filter((item) => item.id !== productId));
+  };
+
+  const totalItems = cart.reduce((total, item) => total + (item.quantity || 1), 0);
+  const totalPrice = cart.reduce((total, item) => total + (item.quantity || 1) * item.price, 0).toFixed(2);
 
   return (
-    <AppContext.Provider value={{
-      user,
-      setUser,
-      handleLogin,
-      handleLogout,
-      products,
-      categories,
-      searchQuery,
-      setSearchQuery,
-      selectedCategory,
-      setSelectedCategory,
-      cart,
-      setCart,
-      darkMode,
-      setDarkMode,
-      currentPage,
-      setCurrentPage,
-      itemsPerPage
-    }}>
+    <AppContext.Provider
+      value={{
+        user,
+        handleLogin: (firebaseUser) => setUser(firebaseUser),
+        handleLogout: () => auth.signOut(),
+        products: filteredProducts, // Pass filtered products to the context
+        categories,
+        searchQuery,
+        setSearchQuery,
+        selectedCategory,
+        setSelectedCategory,
+        cart,
+        setCart,
+        addToCart,
+        increaseQuantity,
+        decreaseQuantity,
+        removeFromCart,
+        darkMode,
+        setDarkMode,
+        currentPage,
+        setCurrentPage,
+        itemsPerPage,
+        totalItems,
+        totalPrice,
+      }}
+    >
       {children}
     </AppContext.Provider>
   );

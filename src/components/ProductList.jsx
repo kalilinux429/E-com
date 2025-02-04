@@ -16,9 +16,18 @@ const ProductList = () => {
 
   return (
     <div className="product-grid">
-      {currentItems.map((product) => <ProductCart key={product.id} product={product} />)}
-      <Pagination totalItems={filteredProducts.length} />
-    </div>
+  {currentItems.length === 0 ? (
+    <p>No products found</p>
+  ) : (
+    currentItems.map((product) => <ProductCart key={product.id} product={product} />)
+  )}
+
+  {/* Add a wrapper around Pagination */}
+  <div className="pagination-container">
+    <Pagination totalItems={filteredProducts.length} />
+  </div>
+</div>
+
   );
 };
 

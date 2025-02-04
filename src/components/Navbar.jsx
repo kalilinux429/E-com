@@ -1,47 +1,98 @@
-
-
-
-// import React from "react";
-// import { GoogleLogin, googleLogout } from "@react-oauth/google";
+// import React, { useCallback, useEffect } from "react";
+// import { FcGoogle } from "react-icons/fc";
+// import { MdLightMode, MdOutlineLightMode } from "react-icons/md";
+// import { FaShoppingCart } from "react-icons/fa";
 // import { useAppContext } from "../context/AppContext";
+// import { signOut, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+// import { auth } from "../firebase"; 
+// import { useNavigate } from "react-router-dom";
 
 // const Navbar = () => {
-//   const { user, setUser, searchQuery, setSearchQuery, darkMode, setDarkMode } = useAppContext();
+//   const { user, setUser, searchQuery, setSearchQuery, darkMode, setDarkMode, totalItems } = useAppContext();
+//   const navigate = useNavigate();
 
 //   // Handle sign out
-//   const handleSignOut = () => {
-//     googleLogout();  // Logs out the user from Google
-//     setUser(null);    // Clears the user from context
-//     localStorage.removeItem("user");  // Clears user data from localStorage
-//   };
+//   const handleSignOut = useCallback(() => {
+//     signOut(auth)
+//       .then(() => {
+//         setUser(null);
+//         localStorage.removeItem("user");
+//       })
+//       .catch((error) => console.error("Error signing out: ", error));
+//   }, [setUser]);
 
-//   // Handle successful Google login
-//   const handleLoginSuccess = (res) => {
-//     const profile = res.profileObj;
-//     setUser(profile);  // Sets the user profile in context
-//     localStorage.setItem("user", JSON.stringify(profile)); // Optionally store user in localStorage
-//   };
+//   // Handle Firebase login
+//   const handleLogin = useCallback(() => {
+//     const provider = new GoogleAuthProvider();
+//     signInWithPopup(auth, provider)
+//       .then((result) => {
+//         const user = result.user;
+//         setUser(user);
+//         localStorage.setItem("user", JSON.stringify(user));
+//       })
+//       .catch((error) => console.error("Error signing in: ", error));
+//   }, [setUser]);
+
+//   // Toggle Dark Mode
+//   const toggleDarkMode = useCallback(() => {
+//     setDarkMode((prev) => !prev);
+//   }, [setDarkMode]);
+
+//   // Apply dark mode globally
+//   useEffect(() => {
+//     document.body.classList.toggle("dark", darkMode);
+//     localStorage.setItem("darkMode", JSON.stringify(darkMode));
+//   }, [darkMode]);
+
+//   // Redirect to Home Page
+//   const goHome = useCallback(() => {
+//     navigate("/");
+//   }, [navigate]);
 
 //   return (
 //     <nav className="navbar">
+//       {/* Search Input */}
+//       <div className="home" onClick={goHome} role="button" aria-label="Home">
+//         <img className="logo" src="/ecom.png" alt="E-commerce Home" />
+//         Home
+//       </div>
 //       <input
 //         type="text"
 //         placeholder="Search"
 //         value={searchQuery}
 //         onChange={(e) => setSearchQuery(e.target.value)}
+//         aria-label="Search Products"
 //       />
-//       <button onClick={() => setDarkMode(!darkMode)}>Dark Mode</button>
-//       {user ? (
-//         <div>
-//           <span>Welcome, {user.name}</span> {/* Display user's name */}
-//           <button onClick={handleSignOut}>Logout</button>  {/* Logout button */}
+
+//       {/* Right Section */}
+//       <div className="navbar-right">
+//         {/* Dark Mode Toggle */}
+//         <button className="dark-mode-toggle" onClick={toggleDarkMode} aria-label="Toggle Dark Mode">
+//           {darkMode ? <MdLightMode /> : <MdOutlineLightMode />}
+//         </button>
+
+//         {/* Cart Button */}
+//         <button className="cart-button" onClick={() => navigate("/cart")} aria-label="Cart">
+//           <FaShoppingCart size={24} />
+//           {totalItems > 0 && <span className="cart-count">{totalItems}</span>}
+//         </button>
+
+//         {/* User Authentication */}
+//         <div className="auth-buttons">
+//           {user ? (
+//             <>
+//               <span>{user.displayName || user.email}</span>
+//               <button className="logout-button" onClick={handleSignOut} aria-label="Logout">
+//                 Logout
+//               </button>
+//             </>
+//           ) : (
+//             <button className="signin-btn" onClick={handleLogin} aria-label="Sign in with Google">
+//               <FcGoogle /> <span>Sign in with Google</span>
+//             </button>
+//           )}
 //         </div>
-//       ) : (
-//         <GoogleLogin
-//           onSuccess={handleLoginSuccess}
-//           onError={() => console.log("Login Failed")}
-//         />
-//       )}
+//       </div>
 //     </nav>
 //   );
 // };
@@ -49,81 +100,103 @@
 // export default Navbar;
 
 
-import React, { useEffect } from "react";
-import { GoogleLogin, googleLogout } from "@react-oauth/google";
+//refein look//
+
+import React, { useCallback, useEffect } from "react";
+import { FcGoogle } from "react-icons/fc";
+import { MdLightMode, MdOutlineLightMode } from "react-icons/md";
+import { FaShoppingCart } from "react-icons/fa";
 import { useAppContext } from "../context/AppContext";
+import { signOut, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { auth } from "../firebase"; 
+import { useNavigate } from "react-router-dom";
 
 const Navbar = () => {
-  const { user, setUser, searchQuery, setSearchQuery, darkMode, setDarkMode } = useAppContext();
+  const { user, setUser, searchQuery, setSearchQuery, darkMode, setDarkMode, totalItems } = useAppContext();
+  const navigate = useNavigate();
 
   // Handle sign out
-  const handleSignOut = () => {
-    googleLogout();  // Logs out the user from Google
-    setUser(null);    // Clears the user from context
-    localStorage.removeItem("user");  // Clears user data from localStorage
-  };
-
-  // Handle successful Google login
-  const handleLoginSuccess = (res) => {
-    const profile = res.profileObj;
-    setUser(profile);  // Sets the user profile in context
-    localStorage.setItem("user", JSON.stringify(profile)); // Store user data in localStorage
-  };
-
-  // On component mount, check for stored user data
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser); // If user data exists, set it in context
-      } catch (e) {
-        console.error("Error parsing user data from localStorage", e);
-      }
-    }
+  const handleSignOut = useCallback(() => {
+    signOut(auth)
+      .then(() => {
+        setUser(null);
+        localStorage.removeItem("user");
+      })
+      .catch((error) => console.error("Error signing out: ", error));
   }, [setUser]);
 
-  // On component mount, check for stored darkMode preference
-  useEffect(() => {
-    const storedDarkMode = localStorage.getItem("darkMode");
-    if (storedDarkMode) {
-      try {
-        setDarkMode(JSON.parse(storedDarkMode)); // Set dark mode based on localStorage value
-      } catch (e) {
-        console.error("Error parsing darkMode data from localStorage", e);
-      }
-    }
+  // Handle Firebase login
+  const handleLogin = useCallback(() => {
+    const provider = new GoogleAuthProvider();
+    signInWithPopup(auth, provider)
+      .then((result) => {
+        const user = result.user;
+        setUser(user);
+        localStorage.setItem("user", JSON.stringify(user));
+      })
+      .catch((error) => console.error("Error signing in: ", error));
+  }, [setUser]);
+
+  // Toggle Dark Mode
+  const toggleDarkMode = useCallback(() => {
+    setDarkMode((prev) => !prev);
   }, [setDarkMode]);
 
-  // Handle dark mode toggle
-  const toggleDarkMode = () => {
-    const newDarkMode = !darkMode;
-    setDarkMode(newDarkMode);
-    localStorage.setItem("darkMode", JSON.stringify(newDarkMode)); // Persist dark mode preference
-  };
+  // Apply dark mode globally
+  useEffect(() => {
+    document.body.classList.toggle("dark", darkMode);
+    localStorage.setItem("darkMode", JSON.stringify(darkMode));
+  }, [darkMode]);
+
+  // Redirect to Home Page
+  const goHome = useCallback(() => {
+    navigate("/");
+  }, [navigate]);
 
   return (
     <nav className="navbar">
+      {/* Search Input */}
+      <div className="home" onClick={goHome} role="button" aria-label="Home">
+        <img className="logo" src="/ecom.png" alt="E-commerce Home" />
+        Home
+      </div>
       <input
         type="text"
         placeholder="Search"
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
+        aria-label="Search Products"
       />
-      <button onClick={toggleDarkMode}>
-        {darkMode ? "Light Mode" : "Dark Mode"}
-      </button>
-      {user ? (
-        <div>
-          <span>Welcome, {user.name}</span> {/* Display user's name */}
-          <button onClick={handleSignOut}>Logout</button> {/* Logout button */}
+
+      {/* Right Section */}
+      <div className="navbar-right">
+        {/* Dark Mode Toggle */}
+        <button className="dark-mode-toggle" onClick={toggleDarkMode} aria-label="Toggle Dark Mode">
+          {darkMode ? <MdLightMode /> : <MdOutlineLightMode />}
+        </button>
+
+        {/* Cart Button */}
+        <button className="cart-button" onClick={() => navigate("/cart")} aria-label="Cart">
+          <FaShoppingCart size={24} />
+          {totalItems > 0 && <span className="cart-count">{totalItems}</span>}
+        </button>
+
+        {/* User Authentication */}
+        <div className="auth-buttons">
+          {user ? (
+            <>
+              <span>{user.displayName || user.email}</span>
+              <button className="logout-button" onClick={handleSignOut} aria-label="Logout">
+                Logout
+              </button>
+            </>
+          ) : (
+            <button className="signin-btn" onClick={handleLogin} aria-label="Sign in with Google">
+              <FcGoogle /> <span>Sign in with Google</span>
+            </button>
+          )}
         </div>
-      ) : (
-        <GoogleLogin
-          onSuccess={handleLoginSuccess}
-          onError={() => console.log("Login Failed")}
-        />
-      )}
+      </div>
     </nav>
   );
 };
